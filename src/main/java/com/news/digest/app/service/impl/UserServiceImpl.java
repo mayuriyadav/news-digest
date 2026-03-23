@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
 
     private UserResponse convertToResponse(User user) {
         UserResponse response = new UserResponse();
-        response.setUserId(user.getUserId());
+        response.setUserId(user.getId());
         response.setUserName(user.getUserName());
         response.setEmail(user.getEmail());
         response.setCreatedAt(user.getCreatedAt());
