@@ -6,6 +6,7 @@ import com.news.digest.app.dto.RegisterRequest;
 import com.news.digest.app.dto.UserResponse;
 import com.news.digest.app.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +14,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/users")
-public class userController {
+@RequiredArgsConstructor
+public class UserController {
 
-    @Autowired
-    private UserService userService;
+
+    private  final UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -36,10 +38,10 @@ public class userController {
         return ResponseEntity.ok(response);
     }
 
-    // Simple test endpoint
-    @GetMapping("/test")
-    public String test() {
-        return "User API is working!";
-    }
+//    // Simple test endpoint
+//    @GetMapping("/test")
+//    public String test() {
+//        return "User API is working!";
+//    }
 
 }

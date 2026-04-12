@@ -151,6 +151,32 @@ public class Article {
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<ArticleShare> shares = new HashSet<>();
+    // ==================== LIFECYCLE CALLBACKS ====================
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+        this.fetchedAt = now;
+        if (this.viewCount == null) this.viewCount = 0;
+        if (this.likeCount == null) this.likeCount = 0;
+        if (this.bookmarkCount == null) this.bookmarkCount = 0;
+        if (this.shareCount == null) this.shareCount = 0;
+        if (this.commentCount == null) this.commentCount = 0;
+        if (this.isActive == null) this.isActive = true;
+        calculateWordCount();
+        calculateReadTime();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+        if (this.content != null) {
+            calculateWordCount();
+            calculateReadTime();
+        }
+    }
 
     // Helper Methods
     public void incrementViewCount() {
@@ -208,25 +234,25 @@ public class Article {
         this.readTimeMinutes = (int) Math.ceil(this.wordCount / 200.0);
     }
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        if (this.viewCount == null) this.viewCount = 0;
-        if (this.likeCount == null) this.likeCount = 0;
-        if (this.bookmarkCount == null) this.bookmarkCount = 0;
-        if (this.shareCount == null) this.shareCount = 0;
-        if (this.commentCount == null) this.commentCount = 0;
-        calculateWordCount();
-        calculateReadTime();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-        if (this.content != null) {
-            calculateWordCount();
-            calculateReadTime();
-        }
-    }
+//    @PrePersist
+//    protected void onCreate() {
+//        this.createdAt = LocalDateTime.now();
+//        this.updatedAt = LocalDateTime.now();
+//        if (this.viewCount == null) this.viewCount = 0;
+//        if (this.likeCount == null) this.likeCount = 0;
+//        if (this.bookmarkCount == null) this.bookmarkCount = 0;
+//        if (this.shareCount == null) this.shareCount = 0;
+//        if (this.commentCount == null) this.commentCount = 0;
+//        calculateWordCount();
+//        calculateReadTime();
+//    }
+//
+//    @PreUpdate
+//    protected void onUpdate() {
+//        this.updatedAt = LocalDateTime.now();
+//        if (this.content != null) {
+//            calculateWordCount();
+//            calculateReadTime();
+//       }
+//    }
 }

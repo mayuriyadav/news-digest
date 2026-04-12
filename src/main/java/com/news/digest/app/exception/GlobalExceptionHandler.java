@@ -16,13 +16,19 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleResourceNotFound(ResourceNotFoundException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("error", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage(), error));
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
     }
+//    @ExceptionHandler(ResourceNotFoundException.class)
+//    public ResponseEntity<ApiResponse<Map<String, String>>> handleResourceNotFound(ResourceNotFoundException ex) {
+//        Map<String, String> error = new HashMap<>();
+//        error.put("error", ex.getMessage());
+//        return ResponseEntity
+//                .status(HttpStatus.NOT_FOUND)
+//                .body(ApiResponse.error(ex.getMessage(), error));
+//    }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleBadRequest(BadRequestException ex) {
