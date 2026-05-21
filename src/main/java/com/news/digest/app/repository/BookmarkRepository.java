@@ -49,4 +49,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     @Query("SELECT DISTINCT b.folder FROM Bookmark b WHERE b.user.id = :userId")
     List<String> findDistinctFoldersByUserId(@Param("userId") Long userId);
 
+    List<Bookmark> findByArticle_Id(Long articleId);
+
+
 }

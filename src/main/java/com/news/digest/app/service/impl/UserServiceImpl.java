@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(()-> new ResourceNotFoundException("User", "email", request.getEmail()));
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId());
         return new AuthResponse(token,"Bearer", convertToResponse(user));
     }
     @Override

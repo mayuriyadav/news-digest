@@ -38,6 +38,10 @@ public class SecurityConfig {
                                 "/api/users/test"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll()
+                   .requestMatchers(HttpMethod.GET, "/api/notifications/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/sources/**").permitAll()
+                        // ── NewsAPI fetch: public in dev ───────────────────────
+                        .requestMatchers("/api/news-fetch/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
