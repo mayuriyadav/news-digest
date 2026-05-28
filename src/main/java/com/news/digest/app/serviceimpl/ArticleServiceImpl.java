@@ -1,8 +1,6 @@
-package com.news.digest.app.service.impl;
+package com.news.digest.app.serviceimpl;
 
-import com.news.digest.app.dto.ArticleDTO;
-import com.news.digest.app.dto.ArticleRequestDTO;
-import com.news.digest.app.dto.ArticleSearchDTO;
+import com.news.digest.app.dto.*;
 import com.news.digest.app.exception.BadRequestException;
 import com.news.digest.app.exception.ResourceNotFoundException;
 import com.news.digest.app.model.*;
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ArticleServiceImpl implements ArticleService {
-
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
     private final BookmarkRepository bookmarkRepository;
@@ -370,6 +367,103 @@ public class ArticleServiceImpl implements ArticleService {
         return userId != null && readingHistoryRepository.findByUserIdAndArticleId(userId, articleId).isPresent();
     }
 
+    @Override
+    public Page<ReadingHistoryDTO> getReadingHistory(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return readingHistoryRepository.findByUserIdOrderByReadAtDesc(userId, pageable)
+                .map(this::toReadingHistoryDTO);
+    }
+
+    @Override
+    public ReadingActivityDTO getReadingActivity(Long userId, LocalDateTime start, LocalDateTime end) {
+        // Daily activity map
+        List<Object[]> dailyRows = readingHistoryRepository.getReadingActivityByDate(userId, start, end);
+        Map<String, Long> dailyActivity = new LinkedHashMap<>();
+        for (Object[] row : dailyRows) {
+            dailyActivity.put(row[0].toString(), ((Number) row[1]).longValue());
+        }
+
+        // Category breakdown
+        List<Object[]> catRows = readingHistoryRepository.getReadingPreferences(userId);
+        List<ReadingActivityDTO.CategoryStatDTO> categoryBreakdown = catRows.stream()
+                .map(row -> new ReadingActivityDTO.CategoryStatDTO(
+                        (String) row[0],
+                        ((Number) row[1]).longValue()))
+                .collect(Collectors.toList());
+
+        return new ReadingActivityDTO(dailyActivity, categoryBreakdown);
+    }
+    private ReadingHistoryDTO toReadingHistoryDTO(ReadingHistory rh) {
+        ReadingHistoryDTO dto = new ReadingHistoryDTO();
+        dto.setId(rh.getId());
+        dto.setArticleId(rh.getArticle().getId());
+        dto.setArticleTitle(rh.getArticle().getTitle());
+//        dto.setArticleImageUrl(rh.getArticle().getImageUrl());
+        dto.setArticleCategory(rh.getArticle().getCategory());
+        dto.setReadAt(rh.getReadAt());
+        dto.setReadDurationSeconds(rh.getReadDurationSeconds());
+        dto.setScrollDepthPercentage(rh.getScrollDepthPercentage());
+        dto.setIsCompleted(rh.getIsCompleted());
+        dto.setReadCount(rh.getReadCount());
+        return dto;
+    }
+
+    @Override
+    public Page<BookmarkDTO> getBookmarks(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return bookmarkRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(this::toBookmarkDTO);
+    }
+
+    @Override
+    public Page<BookmarkDTO> getBookmarksByFolder(Long userId, String folder, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return bookmarkRepository.findByUserIdAndFolder(userId, folder, pageable)
+                .map(this::toBookmarkDTO);
+    }
+
+    @Override
+    public List<String> getBookmarkFolders(Long userId) {
+        return bookmarkRepository.findDistinctFoldersByUserId(userId);
+    }
+
+    private BookmarkDTO toBookmarkDTO(Bookmark b) {
+        BookmarkDTO dto = new BookmarkDTO();
+        dto.setId(b.getId());
+        dto.setArticleId(b.getArticle().getId());
+        dto.setArticleTitle(b.getArticle().getTitle());
+        dto.setArticleImageUrl(b.getArticle().getImageUrl());
+        dto.setArticleCategory(b.getArticle().getCategory());
+        dto.setNotes(b.getNotes());
+        dto.setFolder(b.getFolder());
+        dto.setCreatedAt(b.getCreatedAt());
+        return dto;
+    }
+
+    // ── User Stats ───────────────────────────────────────────────────────────
+
+    @Override
+    public UserStatsDTO getUserStats(Long userId) {
+        Long totalReads    = readingHistoryRepository.countTotalReadsByUser(userId);
+        Long uniqueReads   = readingHistoryRepository.countUniqueArticlesReadByUser(userId);
+        Long totalBookmarks = bookmarkRepository.countByUserId(userId);
+        Double avgReadTime = readingHistoryRepository.getAverageReadTimeByUser(userId);
+
+        // Top category = first row of reading preferences
+        String topCategory = null;
+        List<Object[]> prefs = readingHistoryRepository.getReadingPreferences(userId);
+        if (!prefs.isEmpty()) {
+            topCategory = (String) prefs.get(0)[0];
+        }
+
+        return UserStatsDTO.builder()
+                .totalArticlesRead(totalReads != null ? totalReads : 0L)
+                .uniqueArticlesRead(uniqueReads != null ? uniqueReads : 0L)
+                .totalBookmarks(totalBookmarks != null ? totalBookmarks : 0L)
+                .averageReadTimeSeconds(avgReadTime)
+                .topCategory(topCategory)
+                .build();
+    }
     // ==================== PRIVATE HELPERS ====================
 
     /**
@@ -400,7 +494,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     /**
      * Converts a page of Articles to DTOs.
-     * When userId is present, batch-loads engagement status to avoid N+1 queries.
+     * Batch-loads engagement status with 3 targeted queries (no more findAll).
      */
     private Page<ArticleDTO> toPageDTO(Page<Article> articles, Long userId) {
         if (userId == null || articles.isEmpty()) {
@@ -409,20 +503,9 @@ public class ArticleServiceImpl implements ArticleService {
 
         List<Long> articleIds = articles.map(Article::getId).toList();
 
-        Set<Long> likedIds = articleLikeRepository.findAll().stream()
-                .filter(l -> userId.equals(l.getUser().getId()) && articleIds.contains(l.getArticle().getId()))
-                .map(l -> l.getArticle().getId())
-                .collect(Collectors.toSet());
-
-        Set<Long> bookmarkedIds = bookmarkRepository.findAll().stream()
-                .filter(b -> userId.equals(b.getUser().getId()) && articleIds.contains(b.getArticle().getId()))
-                .map(b -> b.getArticle().getId())
-                .collect(Collectors.toSet());
-
-        Set<Long> readIds = readingHistoryRepository.findAll().stream()
-                .filter(r -> userId.equals(r.getUser().getId()) && articleIds.contains(r.getArticle().getId()))
-                .map(r -> r.getArticle().getId())
-                .collect(Collectors.toSet());
+        Set<Long> likedIds = articleLikeRepository.findLikedArticleIds(userId, articleIds);
+        Set<Long> bookmarkedIds = bookmarkRepository.findBookmarkedArticleIds(userId, articleIds);
+        Set<Long> readIds = readingHistoryRepository.findReadArticleIds(userId, articleIds);
 
         return articles.map(article -> {
             ArticleDTO dto = convertToDTO(article, null);

@@ -1,4 +1,4 @@
-package com.news.digest.app.service.impl;
+package com.news.digest.app.serviceimpl;
 
 import com.news.digest.app.dto.NotificationDTO;
 import com.news.digest.app.dto.NotificationPreferenceDTO;

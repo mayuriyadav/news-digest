@@ -1,4 +1,4 @@
-package com.news.digest.app.service.impl;
+package com.news.digest.app.serviceimpl;
 
 import com.news.digest.app.dto.AuthResponse;
 import com.news.digest.app.dto.LoginRequest;
@@ -8,10 +8,11 @@ import com.news.digest.app.exception.ResourceNotFoundException;
 import com.news.digest.app.model.User;
 import com.news.digest.app.repository.UserRepository;
 import com.news.digest.app.security.JwtUtil;
+import com.news.digest.app.service.NotificationService;
 import com.news.digest.app.service.UserService;
 import com.news.digest.app.exception.ResourceAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,7 +29,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-
+    @Lazy
+    private final NotificationService notificationService ;
     @Override
     public UserResponse register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
@@ -48,6 +50,7 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
 
+        notificationService.initDefaultPreferences(savedUser.getId());
         // Convert to response
         return convertToResponse(savedUser);
     }

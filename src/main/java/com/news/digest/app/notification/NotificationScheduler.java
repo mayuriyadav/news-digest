@@ -2,7 +2,6 @@ package com.news.digest.app.notification;
 
 import com.news.digest.app.repository.NotificationRepository;
 import com.news.digest.app.service.NotificationService;
-import com.news.digest.app.service.impl.NotificationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface NotificationPreferenceRepository  extends JpaRepository<NotificationPreference, Integer> {
+public interface NotificationPreferenceRepository  extends JpaRepository<NotificationPreference, Long> {
 
     List<NotificationPreference> findByUserId(Long userId);
 
