@@ -2,7 +2,7 @@ package com.news.digest.app.controller;
 
 import com.news.digest.app.config.NewsFetchScheduler;
 import com.news.digest.app.dto.ApiResponse;
-import com.news.digest.app.service.impl.NewsIngestionService;
+import com.news.digest.app.serviceimpl.NewsIngestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

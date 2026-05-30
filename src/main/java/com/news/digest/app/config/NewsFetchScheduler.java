@@ -1,7 +1,7 @@
 package com.news.digest.app.config;
 
 
-import com.news.digest.app.service.impl.NewsIngestionService;
+import com.news.digest.app.serviceimpl.NewsIngestionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

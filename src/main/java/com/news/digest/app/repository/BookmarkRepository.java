@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
@@ -31,13 +32,10 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     // Get all bookmarks for a user
     Page<Bookmark> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
-    // Get bookmarks by folder (using @Query to avoid property resolution issues)
+    // Filter bookmarks by folder
     @Query("SELECT b FROM Bookmark b WHERE b.user.id = :userId AND b.folder = :folder ORDER BY b.createdAt DESC")
-    List<Bookmark> findByUserIdAndFolder(@Param("userId") Long userId, @Param("folder") String folder);
+    Page<Bookmark> findByUserIdAndFolder(@Param("userId") Long userId, @Param("folder") String folder, Pageable pageable);
 
-    // Get bookmarks by folder with pagination
-    @Query("SELECT b FROM Bookmark b WHERE b.user.id = :userId AND b.folder = :folder ORDER BY b.createdAt DESC")
-    Page<Bookmark> findByUserIdAndFolderPaginated(@Param("userId") Long userId, @Param("folder") String folder, Pageable pageable);
 
     // Count by user
     Long countByUserId(Long userId);
@@ -48,5 +46,12 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     // Get distinct folders for a user
     @Query("SELECT DISTINCT b.folder FROM Bookmark b WHERE b.user.id = :userId")
     List<String> findDistinctFoldersByUserId(@Param("userId") Long userId);
+
+    List<Bookmark> findByArticle_Id(Long articleId);
+
+    @Query("SELECT b.article.id FROM Bookmark b WHERE b.user.id = :userId AND b.article.id IN :articleIds")
+    Set<Long> findBookmarkedArticleIds(@Param("userId") Long userId, @Param("articleIds") List<Long> articleIds);
+
+
 
 }
