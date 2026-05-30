@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
 
-    private  final UserService userService;
+    private final UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -37,11 +37,5 @@ public class UserController {
         UserResponse response = userService.getCurrentUser();
         return ResponseEntity.ok(response);
     }
-
-//    // Simple test endpoint
-//    @GetMapping("/test")
-//    public String test() {
-//        return "User API is working!";
-//    }
 
 }
