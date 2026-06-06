@@ -34,10 +34,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/users/register",
-                                "/api/users/login",
-                                "/api/users/test"
+                                "/api/users/login"
+
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/agent/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/articles/*/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll().requestMatchers(HttpMethod.POST, "/api/articles/advanced-search").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
