@@ -2,7 +2,6 @@ package com.news.digest.app.security;
 
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -37,9 +36,17 @@ public class SecurityConfig {
                                 "/api/users/login"
 
                         ).permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/agent/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/articles/*/comments/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll().requestMatchers(HttpMethod.POST, "/api/articles/advanced-search").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/articles/**").permitAll()
+//                   .requestMatchers(HttpMethod.GET, "/api/notifications/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/sources/**").permitAll()
+                        // ── NewsAPI fetch: public in dev ───────────────────────
+                        .requestMatchers("/api/news-fetch/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

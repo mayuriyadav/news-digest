@@ -1,8 +1,6 @@
 package com.news.digest.app.service;
 
-import com.news.digest.app.dto.ArticleDTO;
-import com.news.digest.app.dto.ArticleRequestDTO;
-import com.news.digest.app.dto.ArticleSearchDTO;
+import com.news.digest.app.dto.*;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
@@ -103,4 +101,15 @@ public interface ArticleService {
     boolean isArticleLikedByUser(Long articleId, Long userId);
     boolean isArticleBookmarkedByUser(Long articleId, Long userId);
     boolean isArticleReadByUser(Long articleId, Long userId);
+    Page<ReadingHistoryDTO> getReadingHistory(Long userId, int page, int size);
+    ReadingActivityDTO getReadingActivity(Long userId, LocalDateTime start, LocalDateTime end);
+
+    // ── Bookmarks ────────────────────────────────────────────────────────────
+    Page<BookmarkDTO> getBookmarks(Long userId, int page, int size);
+    Page<BookmarkDTO> getBookmarksByFolder(Long userId, String folder, int page, int size);
+    List<String> getBookmarkFolders(Long userId);
+
+    // ── User Stats ───────────────────────────────────────────────────────────
+    UserStatsDTO getUserStats(Long userId);
+
 }

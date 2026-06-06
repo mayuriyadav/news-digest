@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
 @Repository
 public interface ReadingHistoryRepository  extends JpaRepository<ReadingHistory, Long> {
 
@@ -30,11 +32,12 @@ public interface ReadingHistoryRepository  extends JpaRepository<ReadingHistory,
 
     @Query("SELECT AVG(rh.readDurationSeconds) FROM ReadingHistory rh WHERE rh.user.id = :userId AND rh.readDurationSeconds IS NOT NULL")
     Double getAverageReadTimeByUser(@Param("userId") Long userId);
-
+    // Top categories read by a user — used in getReadingPreferences()
     @Query("SELECT rh.article.category, COUNT(rh) FROM ReadingHistory rh " +
             "WHERE rh.user.id = :userId GROUP BY rh.article.category ORDER BY COUNT(rh) DESC")
     List<Object[]> getReadingPreferences(@Param("userId") Long userId);
 
+    // Daily reading activity — used in getReadingActivity()
     @Query("SELECT DATE(rh.readAt), COUNT(rh) FROM ReadingHistory rh " +
             "WHERE rh.user.id = :userId AND rh.readAt BETWEEN :start AND :end " +
             "GROUP BY DATE(rh.readAt) ORDER BY DATE(rh.readAt)")
@@ -43,12 +46,15 @@ public interface ReadingHistoryRepository  extends JpaRepository<ReadingHistory,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
-
+    // Total reads across all users for an article
     @Query("SELECT SUM(rh.readCount) FROM ReadingHistory rh WHERE rh.article.id = :articleId")
     Long getTotalReadsForArticle(@Param("articleId") Long articleId);
-
+    // Unique readers for an article
     @Query("SELECT COUNT(DISTINCT rh.user.id) FROM ReadingHistory rh WHERE rh.article.id = :articleId")
     Long getUniqueReadersForArticle(@Param("articleId") Long articleId);
+    // Targeted batch query — avoids loading the full table in toPageDTO
+    @Query("SELECT rh.article.id FROM ReadingHistory rh WHERE rh.user.id = :userId AND rh.article.id IN :articleIds")
+    Set<Long> findReadArticleIds(@Param("userId") Long userId, @Param("articleIds") List<Long> articleIds);
 }
 
 

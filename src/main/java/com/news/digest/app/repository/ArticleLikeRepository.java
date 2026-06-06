@@ -9,7 +9,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
 @Repository
 public interface ArticleLikeRepository extends JpaRepository<ArticleLike, Long> {
 
@@ -17,6 +20,11 @@ public interface ArticleLikeRepository extends JpaRepository<ArticleLike, Long> 
 
     boolean existsByUserIdAndArticleId(Long userId, Long articleId);
 
+
+    @Query("SELECT al.article.id FROM ArticleLike al WHERE al.user.id = :userId AND al.article.id IN :articleIds")
+    Set<Long> findLikedArticleIds(@Param("userId") Long userId, @Param("articleIds") List<Long> articleIds);
+
+    Set<Long> findArticleIdsByUserIdAndArticleIdIn(Long userId, List<Long> articleIds);
     @Modifying
     @Transactional
     @Query("DELETE FROM ArticleLike al WHERE al.user.id = :userId AND al.article.id = :articleId")

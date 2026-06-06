@@ -3,10 +3,7 @@ package com.news.digest.app.controller;
 
 
 
-import com.news.digest.app.dto.ApiResponse;
-import com.news.digest.app.dto.ArticleDTO;
-import com.news.digest.app.dto.ArticleRequestDTO;
-import com.news.digest.app.dto.ArticleSearchDTO;
+import com.news.digest.app.dto.*;
 import com.news.digest.app.service.ArticleService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -15,8 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -35,8 +30,6 @@ private final ArticleService articleService;
         Object userId = request.getAttribute("userId");
         return userId instanceof Long ? (Long) userId : null;
     }
-
-    // ==================== CRUD ====================
 
     @PostMapping
     public ResponseEntity<ApiResponse<ArticleDTO>> createArticle(
@@ -347,4 +340,79 @@ private final ArticleService articleService;
         if (userId == null) return ResponseEntity.ok(ApiResponse.success("Not authenticated", false));
         return ResponseEntity.ok(ApiResponse.success("Bookmark status", articleService.isArticleBookmarkedByUser(id, userId)));
     }
+
+
+    // ── Reading History ──────────────────────────────────────────────────────
+
+    @GetMapping("/reading-history")
+    public ResponseEntity<ApiResponse<Page<ReadingHistoryDTO>>> getReadingHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
+        Long userId = getUserId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        return ResponseEntity.ok(ApiResponse.success("Reading history fetched",
+                articleService.getReadingHistory(userId, page, size)));
+    }
+
+    @GetMapping("/reading-activity")
+    public ResponseEntity<ApiResponse<ReadingActivityDTO>> getReadingActivity(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            HttpServletRequest request) {
+        Long userId = getUserId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        return ResponseEntity.ok(ApiResponse.success("Reading activity fetched",
+                articleService.getReadingActivity(userId, start, end)));
+    }
+
+    // ── Bookmarks ────────────────────────────────────────────────────────────
+
+    @GetMapping("/bookmarks")
+    public ResponseEntity<ApiResponse<Page<BookmarkDTO>>> getBookmarks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
+        Long userId = getUserId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        return ResponseEntity.ok(ApiResponse.success("Bookmarks fetched",
+                articleService.getBookmarks(userId, page, size)));
+    }
+
+    @GetMapping("/bookmarks/folder/{folder}")
+    public ResponseEntity<ApiResponse<Page<BookmarkDTO>>> getBookmarksByFolder(
+            @PathVariable String folder,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
+        Long userId = getUserId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        return ResponseEntity.ok(ApiResponse.success("Bookmarks fetched",
+                articleService.getBookmarksByFolder(userId, folder, page, size)));
+    }
+
+    @GetMapping("/bookmarks/folders")
+    public ResponseEntity<ApiResponse<List<String>>> getBookmarkFolders(HttpServletRequest request) {
+        Long userId = getUserId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        return ResponseEntity.ok(ApiResponse.success("Folders fetched",
+                articleService.getBookmarkFolders(userId)));
+    }
+
+    // ── User Stats ───────────────────────────────────────────────────────────
+
+    @GetMapping("/user-stats")
+    public ResponseEntity<ApiResponse<UserStatsDTO>> getUserStats(HttpServletRequest request) {
+        Long userId = getUserId(request);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication required"));
+        return ResponseEntity.ok(ApiResponse.success("User stats fetched",
+                articleService.getUserStats(userId)));
+    }
+
 }
